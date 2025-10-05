@@ -16,6 +16,7 @@ function HomePage() {
   const [repos, setRepos] = useState([])
   const [loading, setLoading] = useState(true)
   const [githubStats, setGithubStats] = useState(null)
+  const [selectedSkill, setSelectedSkill] = useState(null)
   
   const [skillsRef, skillsInView] = useInView({ triggerOnce: true, threshold: 0.1 })
   const [projectsRef, projectsInView] = useInView({ triggerOnce: true, threshold: 0.1 })
@@ -189,7 +190,11 @@ function HomePage() {
               const skillProjects = getProjectsForSkill(skill.keywords)
               const Icon = skill.icon
               return (
-                <div key={index} className="border border-[#1a1a1a] p-6 hover:border-[#a78bfa] transition-all group bg-[#0f0f0f]">
+                <div 
+                  key={index} 
+                  onClick={() => setSelectedSkill({ ...skill, projects: skillProjects })}
+                  className="border border-[#1a1a1a] p-6 hover:border-[#a78bfa] transition-all group bg-[#0f0f0f] cursor-pointer transform hover:scale-105"
+                >
                   <div className="flex items-center gap-3 mb-4">
                     <Icon className="h-6 w-6 text-[#a78bfa]" />
                     <div className="text-sm font-bold text-white font-mono">{skill.name}</div>
@@ -202,6 +207,7 @@ function HomePage() {
                     ></div>
                   </div>
                   <div className="text-xs text-[#a78bfa] font-mono mt-2 text-right">{skill.level}%</div>
+                  <div className="text-xs text-[#606060] font-mono mt-2 text-center">Click to view projects →</div>
                 </div>
               )
             })}
@@ -300,6 +306,83 @@ function HomePage() {
           </div>
         </div>
       </section>
+
+      {/* Skill Modal */}
+      {selectedSkill && (
+        <div 
+          className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4"
+          onClick={() => setSelectedSkill(null)}
+        >
+          <div 
+            className="bg-[#0a0a0a] border-2 border-[#a78bfa] max-w-4xl w-full max-h-[80vh] overflow-y-auto p-8"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between mb-6">
+              <div className="flex items-center gap-3">
+                {selectedSkill.icon && <selectedSkill.icon className="h-8 w-8 text-[#a78bfa]" />}
+                <h2 className="text-3xl font-bold text-white font-mono">{selectedSkill.name}</h2>
+              </div>
+              <button 
+                onClick={() => setSelectedSkill(null)}
+                className="text-[#808080] hover:text-[#a78bfa] text-2xl font-mono"
+              >
+                ×
+              </button>
+            </div>
+
+            <div className="mb-6">
+              <div className="text-sm text-[#808080] font-mono mb-2">Proficiency Level</div>
+              <div className="w-full bg-[#1a1a1a] h-4 rounded-full overflow-hidden">
+                <div 
+                  className="h-full bg-gradient-to-r from-[#a78bfa] to-[#c4b5fd]"
+                  style={{ width: `${selectedSkill.level}%` }}
+                ></div>
+              </div>
+              <div className="text-right text-[#a78bfa] font-mono text-sm mt-1">{selectedSkill.level}%</div>
+            </div>
+
+            <div className="mb-6">
+              <h3 className="text-xl font-bold text-white font-mono mb-4">Projects ({selectedSkill.projects.length})</h3>
+              {selectedSkill.projects.length > 0 ? (
+                <div className="space-y-3">
+                  {selectedSkill.projects.map((project, index) => (
+                    <a
+                      key={index}
+                      href={project.html_url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="block border border-[#1a1a1a] p-4 hover:border-[#a78bfa] transition-all bg-[#0f0f0f] group"
+                    >
+                      <div className="flex items-start justify-between mb-2">
+                        <div className="text-sm font-bold text-white group-hover:text-[#a78bfa] font-mono">
+                          {project.name}
+                        </div>
+                        <ExternalLink className="h-4 w-4 text-[#404040] group-hover:text-[#a78bfa] flex-shrink-0" />
+                      </div>
+                      <p className="text-xs text-[#808080] mb-2">
+                        {project.description || 'No description available'}
+                      </p>
+                      <div className="flex items-center gap-4 text-xs text-[#606060] font-mono">
+                        {project.language && <span>Language: {project.language}</span>}
+                        {project.stargazers_count > 0 && <span>⭐ {project.stargazers_count}</span>}
+                      </div>
+                    </a>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-[#808080] font-mono text-sm">No projects found for this skill yet.</div>
+              )}
+            </div>
+
+            <button 
+              onClick={() => setSelectedSkill(null)}
+              className="w-full px-4 py-3 border-2 border-[#a78bfa] text-[#a78bfa] hover:bg-[#a78bfa] hover:text-[#0a0a0a] transition-all font-mono font-bold"
+            >
+              Close
+            </button>
+          </div>
+        </div>
+      )}
     </>
   )
 }
